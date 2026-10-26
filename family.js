@@ -10,7 +10,7 @@ function lock(value){busy=value;$('workspace').classList.toggle('busy',value);$(
 function showAuth(clearSelection=true){wallets=[];if(clearSelection)active=null;undo=null;editing=null;$('workspace').hidden=true;$('nav').hidden=true;$('logout').hidden=true;$('auth').hidden=false;$('summary').innerHTML='';for(const id of ['picker','name-dialog'])if($(id).open)$(id).close();connection('請登入家庭帳號');}
 function validateWallet(w){if(!w||typeof w.id!=='string'||typeof w.name!=='string'||!Number.isSafeInteger(w.revision))throw Error('銀包資料格式不正確。');R.validate(w.state);return w;}
 async function load({silent=false}={}){
- if(busy||!Cloud.loggedIn())return;lock(true);
+ if(busy||!Cloud.loggedIn()||Cloud.needsPassword?.())return;lock(true);
  try{connection('正在同步雲端…');const rows=(await Cloud.list()).map(validateWallet);
  // Archive each completed period before displaying its cleared current period.
  for(let i=0;i<rows.length;i++){const state=structuredClone(rows[i].state);if(R.rollover(state)){try{rows[i]=validateWallet(await Cloud.update(rows[i],{state}));}catch(e){if(e.conflict){wallets=(await Cloud.list()).map(validateWallet);throw e;}throw e;}}}
@@ -63,11 +63,11 @@ function authError(e){$('auth-message').textContent=e.message==='Invalid login c
 async function authAction(fn){if(busy)return;lock(true);$('login-form').classList.add('busy');try{await fn();}catch(e){authError(e);}finally{lock(false);$('login-form').classList.remove('busy');}}
 $('login-form').onsubmit=e=>{e.preventDefault();authAction(async()=>{await Cloud.login($('email').value.trim(),$('password').value);$('password').value='';lock(false);await load();});};
 $('signup').onclick=()=>{if(!$('login-form').reportValidity())return;authAction(async()=>{const loggedIn=await Cloud.signup($('email').value.trim(),$('password').value);$('password').value='';if(loggedIn){lock(false);await load();}else $('auth-message').textContent='請到電郵按確認連結，再返回登入。同一家人使用這個電郵及密碼。';});};
-$('forgot').onclick=()=>{const email=$('email').value.trim();if(!$('email').reportValidity())return;authAction(async()=>{await Cloud.reset(email);$('auth-message').textContent='如帳號存在，會收到重設密碼電郵。請檢查收件匣及垃圾郵件。';});};
+$('forgot').onclick=()=>{const email=$('email').value.trim();if(!$('email').reportValidity())return;authAction(async()=>{await Cloud.reset(email);$('auth-message').textContent='如帳號存在，會收到重設密碼電郵。只開啟最新一封，連結只能使用一次；請檢查收件匣及垃圾郵件。';});};
 $('password-form').onsubmit=e=>{e.preventDefault();authAction(async()=>{await Cloud.password($('new-password').value);$('new-password').value='';$('password-form').hidden=true;$('login-form').hidden=false;lock(false);await load();toast('密碼已更新。');});};
 $('logout').onclick=async()=>{if(busy)return;lock(true);try{await Cloud.logout();}catch(_){}finally{showAuth();lock(false);clearTimeout(clockTimer);}};
 window.addEventListener('focus',()=>load({silent:true}));window.addEventListener('online',()=>load({silent:true}));window.addEventListener('offline',()=>connection('目前離線，請連線後再修改。',true));
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load({silent:true});});
 window.addEventListener('storage',e=>{if(e.key==='joetou.family.auth.v1')location.reload();});
-(async()=>{showAuth(false);if(!Cloud.ready()){$('auth-message').textContent='家庭版正在準備雲端服務，暫未開放登入。';$('login-form').classList.add('busy');connection('尚未接駁雲端');return;}if(await Cloud.acceptRecovery()){$('login-form').hidden=true;$('password-form').hidden=false;connection('請設定新密碼');return;}if(Cloud.loggedIn())await load();})();
+(async()=>{showAuth(false);if(!Cloud.ready()){$('auth-message').textContent='家庭版正在準備雲端服務，暫未開放登入。';$('login-form').classList.add('busy');connection('尚未接駁雲端');return;}try{await Cloud.acceptRecovery();}catch(e){authError(e);connection('請重新申請電郵連結',true);return;}if(Cloud.needsPassword?.()){$('login-form').hidden=true;$('password-form').hidden=false;connection('請設定新密碼');return;}if(Cloud.loggedIn())await load();})();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
