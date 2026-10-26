@@ -1,0 +1,5 @@
+const CACHE='joetou-family-rewards-v1';
+const ASSETS=['./','./index.html','./config.js','./core.js','./cloud.js','./family.js','./style.css','./family.css','./manifest.webmanifest','./campaign-banner.png','./icon.svg','./icon-192.png','./icon-512.png','./logo-boc.jpg','./logo-icbc.jpg','./logo-mpay.jpg','./logo-luso.jpg','./logo-cgb.jpg','./logo-alipay.jpg','./logo-uepay.jpg','./logo-taifung.jpg'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('joetou-family-rewards-')&&k!==CACHE).map(k=>caches.delete(k))))));
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||!e.request.url.startsWith(self.registration.scope))return;const u=new URL(e.request.url);if(!ASSETS.some(p=>new URL(p,self.registration.scope).pathname===u.pathname))return;e.respondWith(fetch(e.request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));}return response;}).catch(()=>caches.match(e.request,{cacheName:CACHE})));});
