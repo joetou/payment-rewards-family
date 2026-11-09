@@ -74,4 +74,4 @@ window.addEventListener('focus',()=>load({silent:true}));window.addEventListener
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load({silent:true});});
 window.addEventListener('storage',e=>{if(e.key==='joetou.family.auth.v1')location.reload();});
 (async()=>{showAuth(false);if(!Cloud.ready()){$('auth-message').textContent='家庭版正在準備雲端服務，暫未開放登入。';$('login-form').classList.add('busy');connection('尚未接駁雲端');return;}try{await Cloud.acceptRecovery();}catch(e){authError(e);connection('請重新申請電郵連結',true);return;}if(Cloud.needsPassword?.()){$('login-form').hidden=true;$('password-form').hidden=false;connection('請設定新密碼');return;}if(Cloud.loggedIn())await load();})();
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+window.canApplyAppUpdate=()=>!editing&&!busy&&!renaming&&!Cloud.needsPassword?.();
