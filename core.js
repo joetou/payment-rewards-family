@@ -67,5 +67,6 @@ const totals=rows=>rows.reduce((a,x)=>({total:a.total+x.amount,used:a.used+(x.re
 const hasResult=x=>x.amount>0||x.recorded===true;
 const resultLabel=x=>hasResult(x)?(x.amount===0?(x.discount===true?'滿減':'謝謝參與'):String(x.amount)):'未抽';
 const slotAction=x=>!hasResult(x)||x.redeemed||x.amount===0?'pick':'redeem';
-const api={slotAction,hasResult,resultLabel,amounts,catalog,fresh,validate,upgrade,rollover,totals,periodAt,periodLabel,addDays};root.Rewards=api;if(typeof module!=='undefined')module.exports=api;
+function cumulative(s){const periods=[s,...s.history.filter(h=>h.origin==='auto')];const banks=catalog.map(([id])=>({id,amount:periods.reduce((sum,p)=>sum+totals(p.records[id]).total,0)}));return {banks,total:banks.reduce((sum,b)=>sum+b.amount,0)};}
+const api={cumulative,slotAction,hasResult,resultLabel,amounts,catalog,fresh,validate,upgrade,rollover,totals,periodAt,periodLabel,addDays};root.Rewards=api;if(typeof module!=='undefined')module.exports=api;
 })(globalThis);
