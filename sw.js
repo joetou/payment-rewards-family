@@ -1,5 +1,5 @@
-const CACHE='joetou-family-rewards-v9';
-const ASSETS=['./','./index.html','./config.js','./core.js?v=9','./cloud.js','./family.js?v=9','./style.css','./family.css?v=9','./manifest.webmanifest','./campaign-banner.png','./flat-banner.png','./icon.svg','./icon-192.png','./icon-512.png','./logo-boc.jpg','./logo-icbc.jpg','./logo-mpay.jpg','./logo-luso.jpg','./logo-cgb.jpg','./logo-alipay.jpg','./logo-uepay.jpg','./logo-taifung.jpg','./update.js?v=9'];
+const CACHE='joetou-family-rewards-v10';
+const ASSETS=['./','./index.html','./config.js','./core.js?v=10','./cloud.js','./family.js?v=10','./style.css','./family.css?v=10','./manifest.webmanifest','./campaign-banner.png','./flat-banner.png','./icon.svg','./icon-192.png','./icon-512.png','./logo-boc.jpg','./logo-icbc.jpg','./logo-mpay.jpg','./logo-luso.jpg','./logo-cgb.jpg','./logo-alipay.jpg','./logo-uepay.jpg','./logo-taifung.jpg','./update.js?v=10'];
 // Finish downloading this release before activating. Keep the previous shell for open tabs.
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS.map(p=>new Request(new URL(p,self.registration.scope),{cache:'reload'})))).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil((async()=>{const keys=(await caches.keys()).filter(k=>k.startsWith('joetou-family-rewards-'));const old=keys.filter(k=>k!==CACHE);await Promise.all(old.slice(0,-1).map(k=>caches.delete(k)));await self.clients.claim();})()));
